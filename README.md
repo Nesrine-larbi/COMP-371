@@ -4,10 +4,9 @@
 A simple OpenGL-based 3D application built as a programming project for our graphics course.
 
 ## 👨‍👩‍👧‍👦 Authors
-
-- Aditi Abhaysingh Ingle
-- Nesrine larbi
-- 
+- Nesrine larbi 40079009
+- Aditi Abhaysingh Ingle 40266449
+- Hanad-Keysse Mohamed Hassan 40299566
 
 ## 👩‍💻 Project Description
 
