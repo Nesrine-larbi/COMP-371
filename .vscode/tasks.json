@@ -1,0 +1,54 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: Build Solar System",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "-std=c++17",
+                "main.cpp",
+                "-I/opt/homebrew/include",
+                "-Iinclude",
+                "-L/opt/homebrew/lib",
+                "-lglfw",
+                "-lGLEW",
+                "-lassimp",
+                "-framework",
+                "OpenGL",
+                "-framework",
+                "Cocoa",
+                "-framework",
+                "IOKit",
+                "-framework",
+                "CoreVideo",
+                "-o",
+                "bin/solarsystem"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Build complete solar system project with GLEW and Assimp",
+            "dependsOn": "create-bin-dir"
+        },
+        {
+            "label": "create-bin-dir",
+            "type": "shell",
+            "command": "mkdir",
+            "args": ["-p", "bin"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build"
+        }
+    ],
+    "version": "2.0.0"
+}
