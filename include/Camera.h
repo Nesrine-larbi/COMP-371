@@ -18,7 +18,7 @@ private:
     void updateCameraVectors();
 
 public:
-    Camera(glm::vec3 pos = glm::vec3(0.0f, 0.0f, 50.0f));
+    Camera(glm::vec3 pos = glm::vec3(0.0f, 0.0f, 200.0f));
     
     glm::mat4 getViewMatrix() const;
     void processKeyboard(int direction, float deltaTime);

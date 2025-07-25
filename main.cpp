@@ -9,6 +9,7 @@ int main() {
         return -1;
     }
     
+    scene.setWindowSize(1280, 720); 
     scene.run();
     scene.cleanup();
     
