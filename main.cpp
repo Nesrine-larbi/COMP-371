@@ -1,8 +1,3 @@
-//
-// Modern Solar System - Clean Architecture Version  
-// All classes properly separated for maintainability
-//
-
 #include "include/Scene.h"
 #include <iostream>
 
