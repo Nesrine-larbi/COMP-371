@@ -10,8 +10,8 @@
 
 Scene* Scene::instance = NULL;
 
-Scene::Scene() : camera(glm::vec3(0.0f, 0.0f, 50.0f)), deltaTime(0.0f), lastFrame(0.0f), 
-          lastX(400), lastY(300), firstMouse(true) {
+Scene::Scene() : camera(glm::vec3(0.0f, 0.0f, 100.0f)), windowWidth(1920), windowHeight(800), 
+          deltaTime(0.0f), lastFrame(0.0f), lastX(960), lastY(400), firstMouse(true) {
     instance = this;
 }
 
@@ -23,7 +23,7 @@ bool Scene::initialize() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
-    window = glfwCreateWindow(800, 600, "Modern Solar System - Modular Architecture", NULL, NULL);
+    window = glfwCreateWindow(windowWidth, windowHeight, "Modern Solar System - Modular Architecture", NULL, NULL);
     if (!window) {
         glfwTerminate();
         return false;
@@ -31,7 +31,8 @@ bool Scene::initialize() {
     
     glfwMakeContextCurrent(window);
     glfwSetCursorPosCallback(window, mouseCallback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     // Initialize GLEW
     if (glewInit() != GLEW_OK) return false;
@@ -40,6 +41,9 @@ bool Scene::initialize() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    
+    // Set initial viewport
+    glViewport(0, 0, windowWidth, windowHeight);
     
     // Create scene objects
     objects.push_back(std::make_unique<Skybox>());
@@ -78,7 +82,8 @@ void Scene::run() {
         // Render
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 1000.0f);
+        float aspectRatio = (float)windowWidth / (float)windowHeight;
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 1000.0f);
         glm::mat4 view = camera.getViewMatrix();
         
         // Render all objects
@@ -130,4 +135,23 @@ void Scene::mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 
 void Scene::addCelestialBody(std::unique_ptr<CelestialBody> body) {
     celestialBodies.push_back(std::move(body));
+}
+
+void Scene::setWindowSize(int width, int height) {
+    windowWidth = width;
+    windowHeight = height;
+    if (window) {
+        glfwSetWindowSize(window, width, height);
+    }
+}
+
+void Scene::framebufferSizeCallback(GLFWwindow* window, int width, int height) {
+    // Update viewport
+    glViewport(0, 0, width, height);
+    
+    // Update stored window dimensions
+    if (instance) {
+        instance->windowWidth = width;
+        instance->windowHeight = height;
+    }
 }

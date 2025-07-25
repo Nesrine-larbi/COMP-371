@@ -23,6 +23,9 @@ private:
     std::vector<std::unique_ptr<SceneObject> > objects;  // C++98 compatible spacing
     std::vector<std::unique_ptr<CelestialBody> > celestialBodies; // Separate container for celestial objects
     
+    int windowWidth;
+    int windowHeight;
+    
     float deltaTime;
     float lastFrame;
     double lastX, lastY;
@@ -38,8 +41,10 @@ public:
     void cleanup();
     void processInput();
     
-    // Add methods to manage celestial bodies
     void addCelestialBody(std::unique_ptr<CelestialBody> body);
     
+    void setWindowSize(int width, int height);
+    
     static void mouseCallback(GLFWwindow* window, double xpos, double ypos);
+    static void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 };

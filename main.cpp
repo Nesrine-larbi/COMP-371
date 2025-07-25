@@ -1,8 +1,3 @@
-//
-// Modern Solar System - Clean Architecture Version  
-// All classes properly separated for maintainability
-//
-
 #include "include/Scene.h"
 #include <iostream>
 
@@ -14,6 +9,7 @@ int main() {
         return -1;
     }
     
+    scene.setWindowSize(1280, 720); 
     scene.run();
     scene.cleanup();
     
