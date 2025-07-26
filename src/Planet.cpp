@@ -17,6 +17,13 @@ Earth::Earth() : Planet("assets/earth.jpg", 4.0f) {
     setOrbitalSpeed(0.3f);
     setRotationSpeed(2.0f);
 }
+// Moon implementation as a planet (child of Earth) 
+Moon::Moon(CelestialBody* parent) : Planet("assets/moon.png", 1.0f) {
+    setOrbitalRadius(10.0f);
+    setOrbitalSpeed(1.5f);
+    setRotationSpeed(1.0f);
+    setParent(parent); 
+}
 
 Mars::Mars() : Planet("assets/mars.jpg", 3.0f) {
     setOrbitalRadius(150.0f);
