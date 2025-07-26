@@ -20,6 +20,11 @@ public:
     Earth();
 };
 
+class Moon : public Planet {
+public:
+    Moon(CelestialBody* parent);
+};
+
 // Mars with specific properties  
 class Mars : public Planet {
 public:
