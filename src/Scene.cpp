@@ -62,8 +62,8 @@ bool Scene::initialize()
 
     addCelestialBody(std::make_unique<Mars>());
     CelestialBody *mars = celestialBodies.back().get();
-    addCelestialBody(std::make_unique<Moon>(mars));
-    addCelestialBody(std::make_unique<Moon>(mars, 20.0f));
+    addCelestialBody(std::make_unique<Moon>(mars, 9.4f, 1.0f, 1.0f));
+    addCelestialBody(std::make_unique<Moon>(mars, 23.5f, 0.25f, 0.25f));
 
     // addCelestialBody(std::make_unique<Venus>());
     return true;
