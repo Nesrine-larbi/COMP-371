@@ -56,16 +56,26 @@ bool Scene::initialize()
 
     // Test adding one planet at a time
 
+    // Mercury
+    addCelestialBody(std::make_unique<Mercury>());
+
+    // Venus
+    addCelestialBody(std::make_unique<Venus>());
+
+    // Earth
     addCelestialBody(std::make_unique<Earth>());
     CelestialBody *earth = celestialBodies.back().get();
     addCelestialBody(std::make_unique<Moon>(earth));
 
+    // Mars
     addCelestialBody(std::make_unique<Mars>());
     CelestialBody *mars = celestialBodies.back().get();
     addCelestialBody(std::make_unique<Moon>(mars, 9.4f, 1.0f, 1.0f, 1.0f));
     addCelestialBody(std::make_unique<Moon>(mars, 23.5f, 0.25f, 0.25f, 0.6f));
 
-    // addCelestialBody(std::make_unique<Venus>());
+    // Jupiter
+    addCelestialBody(std::make_unique<Jupiter>());
+
     return true;
 }
 
