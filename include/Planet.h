@@ -25,7 +25,7 @@ public:
 class Moon : public Planet
 {
 public:
-    Moon(CelestialBody *parent, float orbitalRadius = 10.0f, float orbitalSpeed = 1.5f, float rotationSpeed = 1.0f);
+    Moon(CelestialBody *parent, float orbitalRadius = 10.0f, float orbitalSpeed = 1.5f, float rotationSpeed = 1.0f, float moonScale = 1.0f);
 };
 
 // Mars with specific properties

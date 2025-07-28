@@ -20,7 +20,7 @@ Earth::Earth() : Planet("assets/earth.jpg", 4.0f)
     setRotationSpeed(2.0f);
 }
 // Moon implementation as a planet (child of Earth)
-Moon::Moon(CelestialBody *parent, float orbitalRadius, float orbitalSpeed, float rotationSpeed) : Planet("assets/moon.png", 1.0f)
+Moon::Moon(CelestialBody *parent, float orbitalRadius, float orbitalSpeed, float rotationSpeed, float moonScale) : Planet("assets/moon.png", moonScale)
 {
     // setOrbitalRadius(10.0f);
     // setOrbitalSpeed(1.5f);
