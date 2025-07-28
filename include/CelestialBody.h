@@ -11,7 +11,7 @@ protected:
     std::unique_ptr<Shader> shader;
     unsigned int texture, texVBO;
     int indexCount;
-    
+    CelestialBody* parent = nullptr;
     // Common sphere generation
     void generateSphere(int sectorCount = 36, int stackCount = 18);
     void loadTexture(const std::string& texturePath);
@@ -39,6 +39,8 @@ public:
     void setOrbitalRadius(float radius) { orbitalRadius = radius; }
     void setOrbitalSpeed(float speed) { orbitalSpeed = speed; }
     void setRotationSpeed(float speed) { rotationSpeed = speed; }
+    void setParent(CelestialBody* a) {parent = a;}
+    glm::vec3 getPosition() const { return position;}
     
     virtual void update(float deltaTime); // For animation/rotation
 };

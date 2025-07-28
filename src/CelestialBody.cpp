@@ -138,6 +138,7 @@ std::string CelestialBody::getFragmentShader() {
 
 void CelestialBody::update(float deltaTime) {
     // Update orbital position
+    glm::vec3 orbitPosition(0.0f);
     if (orbitalSpeed != 0.0f) {
         orbitalAngle += orbitalSpeed * deltaTime;
         if (orbitalAngle > 2 * 3.14159265359f) {
@@ -145,11 +146,20 @@ void CelestialBody::update(float deltaTime) {
         }
         
         // Calculate position based on orbital radius and angle
-        setPosition(glm::vec3(
+            orbitPosition = glm::vec3(
             orbitalRadius * cos(orbitalAngle),
             0.0f,
             orbitalRadius * sin(orbitalAngle)
-        ));
+        );
+    }
+    
+    // Adjust position relative to parent if there's one (for the moon)
+    if(parent){
+        setPosition(parent->getPosition() + orbitPosition);
+    }
+    else 
+    {
+        setPosition(orbitPosition);
     }
     
     // Update rotation
