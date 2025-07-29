@@ -76,6 +76,15 @@ bool Scene::initialize()
     // Jupiter
     addCelestialBody(std::make_unique<Jupiter>());
 
+    // Saturn
+    addCelestialBody(std::make_unique<Saturn>());
+
+    // Uranus
+    addCelestialBody(std::make_unique<Uranus>());
+
+    // Neptune
+    addCelestialBody(std::make_unique<Neptune>());
+
     return true;
 }
 
