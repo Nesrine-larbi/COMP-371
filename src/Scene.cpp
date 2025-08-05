@@ -236,7 +236,7 @@ bool Scene::initialize()
 
     // Configure OpenGL
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     // Set initial viewport
@@ -280,6 +280,8 @@ bool Scene::initialize()
     return true;
 }
 
+bool isSpinning = true;
+
 void Scene::run()
 {
     std::cout << "=== Modern Solar System - Modular Architecture ===" << std::endl;
@@ -305,11 +307,11 @@ void Scene::run()
 
     // Spinning cube at camera position
     float spinningAngle = 0.0f;
+    float lastFrameTime = glfwGetTime();
 
     while (!glfwWindowShouldClose(window))
     {
-        float lastFrameTime = glfwGetTime();
-        glUseProgram(whiteShaderProgram);
+
         float dt = glfwGetTime() - lastFrameTime;
         lastFrameTime += dt;
 
@@ -330,6 +332,8 @@ void Scene::run()
         // Render
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glUseProgram(whiteShaderProgram);
+
         float aspectRatio = (float)windowWidth / (float)windowHeight;
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 1000.0f);
         glm::mat4 view = camera.getViewMatrix();
@@ -344,7 +348,11 @@ void Scene::run()
             objects[i]->render(view, projection);
         }
 
-        spinningAngle += 45.0f * dt;
+        float spinSpeed = 100.0f;
+        if (isSpinning)
+        {
+            spinningAngle += 60.0f * dt;
+        }
 
         mat4 modelWorldMatrix =
             glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -5.0f)) *
@@ -354,8 +362,10 @@ void Scene::run()
         setWorldMatrix(whiteShaderProgram, modelWorldMatrix);
 
         mat4 satelliteModelMatrix =
-            glm::translate(mat4(1.0f), vec3(-30.0f, 0.0f, 0.0f)) *
-            glm::scale(mat4(1.0f), vec3(3.0f));
+            glm::translate(mat4(1.0f), vec3(-70.0f, 0.0f, -20.0f)) *
+            glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) * // <-- Spin
+            glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *        // <-- Tilt it on its side
+            glm::scale(mat4(1.0f), vec3(2.0f));
 
         glm::mat4 projectionMatrix = glm::perspective(
             glm::radians(70.0f),
@@ -364,8 +374,8 @@ void Scene::run()
             1000.0f);
 
         setProjectionMatrix(whiteShaderProgram, projectionMatrix);
-        setViewMatrix(whiteShaderProgram, view);
         setWorldMatrix(whiteShaderProgram, satelliteModelMatrix);
+        setViewMatrix(whiteShaderProgram, view);
 
         glBindVertexArray(satelliteVAO);
         glDrawArrays(GL_TRIANGLES, 0, satelliteVertices);
@@ -395,6 +405,21 @@ void Scene::processInput()
         camera.processKeyboard(2, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.processKeyboard(3, deltaTime);
+
+    static bool spacePressedLastFrame = false;
+
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    {
+        if (!spacePressedLastFrame)
+        {
+            isSpinning = !isSpinning;
+            spacePressedLastFrame = true;
+        }
+    }
+    else
+    {
+        spacePressedLastFrame = false;
+    }
 }
 
 void Scene::mouseCallback(GLFWwindow *window, double xpos, double ypos)
