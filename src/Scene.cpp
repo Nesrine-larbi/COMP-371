@@ -294,11 +294,24 @@ void Scene::run()
     int whiteShaderProgram = compileAndLinkShaders(getVertexShaderSource(), getFragmentShaderSource());
 
     int satelliteVertices;
-    GLuint satelliteVAO = setupModelEBO(satellitePath, satelliteVertices);
+    GLuint satelliteVAO = setupModelVBO(satellitePath, satelliteVertices);
+
+    glm::mat4 satelliteModelMatrix = glm::mat4(1.0f);
+    satelliteModelMatrix = glm::translate(satelliteModelMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
+    satelliteModelMatrix = glm::scale(satelliteModelMatrix, glm::vec3(0.01f));
+
+    int activeVAOVertices = satelliteVertices;
+    GLuint activeVAO = satelliteVAO;
+
+    // Spinning cube at camera position
+    float spinningAngle = 0.0f;
 
     while (!glfwWindowShouldClose(window))
     {
+        float lastFrameTime = glfwGetTime();
         glUseProgram(whiteShaderProgram);
+        float dt = glfwGetTime() - lastFrameTime;
+        lastFrameTime += dt;
 
         // Timing
         float currentFrame = glfwGetTime();
@@ -331,13 +344,24 @@ void Scene::run()
             objects[i]->render(view, projection);
         }
 
-        mat4 satelliteModelMatrix =
-            glm::translate(mat4(1.0f), vec3(2.0f, 0.0f, -5.0f)) *
-            glm::scale(mat4(1.0f), vec3(25.0f));
+        spinningAngle += 45.0f * dt;
 
-        mat4 projectionMatrix = glm::perspective(70.0f,
-                                                 800.0f / 600.0f,
-                                                 0.01f, 100.0f);
+        mat4 modelWorldMatrix =
+            glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -5.0f)) *
+            glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
+            glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
+            glm::scale(mat4(1.0f), vec3(0.2f));
+        setWorldMatrix(whiteShaderProgram, modelWorldMatrix);
+
+        mat4 satelliteModelMatrix =
+            glm::translate(mat4(1.0f), vec3(-30.0f, 0.0f, 0.0f)) *
+            glm::scale(mat4(1.0f), vec3(3.0f));
+
+        glm::mat4 projectionMatrix = glm::perspective(
+            glm::radians(70.0f),
+            800.0f / 600.0f,
+            0.1f,
+            1000.0f);
 
         setProjectionMatrix(whiteShaderProgram, projectionMatrix);
         setViewMatrix(whiteShaderProgram, view);
