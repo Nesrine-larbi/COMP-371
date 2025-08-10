@@ -19,6 +19,7 @@ using namespace glm;
 using namespace std;
 
 
+
 GLuint setupModelVBO(string path, int &vertexCount)
 {
     std::vector<glm::vec3> vertices;
@@ -133,7 +134,6 @@ Scene::Scene() : camera(glm::vec3(0.0f, 0.0f, 100.0f)), windowWidth(1920), windo
 
 bool Scene::initialize()
 {
-
     // Initialize GLFW
     if (!glfwInit())
         return false;
@@ -160,7 +160,7 @@ bool Scene::initialize()
 
     // Configure OpenGL
     glEnable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     // Set initial viewport
@@ -219,8 +219,6 @@ bool Scene::initialize()
 
     return true;
 }
-
-bool isSpinning = true;
 
 void Scene::run()
 {
@@ -297,8 +295,6 @@ void Scene::run()
 
         // Second pass: Render scene with shadows
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glUseProgram(whiteShaderProgram);
 
         float aspectRatio = (float)windowWidth / (float)windowHeight;
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 1000.0f);
