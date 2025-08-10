@@ -16,8 +16,8 @@ Camera::Camera(glm::vec3 pos)
     : position(pos), worldUp(glm::vec3(0.0f, 1.0f, 0.0f)) {
     yaw = -90.0f;
     pitch = 0.0f;
-    speed = 5.0f;
-    sensitivity = 0.1f;
+    speed = 2.5f;
+    sensitivity = 0.05f;
     updateCameraVectors();
 }
 
