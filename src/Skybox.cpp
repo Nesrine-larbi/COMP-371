@@ -56,30 +56,11 @@ void Skybox::loadCubemap() {
 }
 
 Skybox::Skybox() {
-    std::string vertexShader = R"(
-        #version 330 core
-        layout (location = 0) in vec3 aPos;
-        out vec3 TexCoords;
-        uniform mat4 projection;
-        uniform mat4 view;
-        void main() {
-            TexCoords = aPos;
-            vec4 pos = projection * view * vec4(aPos, 1.0);
-            gl_Position = pos.xyww;
-        }
-    )";
-    
-    std::string fragmentShader = R"(
-        #version 330 core
-        out vec4 FragColor;
-        in vec3 TexCoords;
-        uniform samplerCube skybox;
-        void main() {
-            FragColor = texture(skybox, TexCoords);
-        }
-    )";
-    
-    shader = std::make_unique<Shader>(vertexShader, fragmentShader);
+    shader = std::unique_ptr<Shader>(Shader::fromFiles("shaders/skybox.vert", "shaders/skybox.frag"));
+    if (!shader) {
+        std::cerr << "Failed to load skybox shaders" << std::endl;
+        return;
+    }
     setupMesh();
     loadCubemap();
 }

@@ -6,12 +6,13 @@
 
 #include "../include/stb_image.h"
 #include "../include/CelestialBody.h"
+#include "../include/LightManager.h"
+#include "../include/ShadowMap.h"
 
-CelestialBody::CelestialBody()
-    : orbitalRadius(0.0f), orbitalSpeed(0.0f), rotationSpeed(0.0f),
-      orbitalAngle(0.0f), rotationAngle(0.0f), indexCount(0),
-      texture(0), texVBO(0)
-{
+CelestialBody::CelestialBody() 
+    : orbitalRadius(0.0f), orbitalSpeed(0.0f), rotationSpeed(0.0f), 
+      orbitalAngle(0.0f), rotationAngle(0.0f), indexCount(0), 
+      texture(0), texVBO(0), lightingEnabled(true) {
 }
 
 CelestialBody::~CelestialBody()
@@ -123,39 +124,21 @@ void CelestialBody::loadTexture(const std::string &texturePath)
     stbi_image_free(data);
 }
 
-void CelestialBody::setupShaders(const std::string &vertexShader, const std::string &fragmentShader)
-{
-    shader = std::unique_ptr<Shader>(new Shader(vertexShader, fragmentShader));
+void CelestialBody::setupShaders(const std::string& vertexShaderPath, const std::string& fragmentShaderPath) {
+    shader = std::unique_ptr<Shader>(Shader::fromFiles(vertexShaderPath, fragmentShaderPath));
+    if (!shader) {
+        std::cerr << "Failed to load shaders from files: " << vertexShaderPath << " and " << fragmentShaderPath << std::endl;
+        // Fallback to default behavior if file loading fails
+        shader = std::unique_ptr<Shader>(new Shader("", ""));
+    }
 }
 
-std::string CelestialBody::getVertexShader()
-{
-    return R"(
-        #version 330 core
-        layout (location = 0) in vec3 aPos;
-        layout (location = 1) in vec2 aTexCoord;
-        out vec2 TexCoord;
-        uniform mat4 model;
-        uniform mat4 view;
-        uniform mat4 projection;
-        void main() {
-            gl_Position = projection * view * model * vec4(aPos, 1.0);
-            TexCoord = aTexCoord;
-        }
-    )";
+std::string CelestialBody::getVertexShaderPath() {
+    return "shaders/celestial_body.vert";
 }
 
-std::string CelestialBody::getFragmentShader()
-{
-    return R"(
-        #version 330 core
-        out vec4 FragColor;
-        in vec2 TexCoord;
-        uniform sampler2D objectTexture;
-        void main() {
-            FragColor = texture(objectTexture, TexCoord);
-        }
-    )";
+std::string CelestialBody::getFragmentShaderPath() {
+    return "shaders/celestial_body.frag";
 }
 
 void CelestialBody::update(float deltaTime)
@@ -198,8 +181,15 @@ void CelestialBody::update(float deltaTime)
     }
 }
 
-void CelestialBody::render(const glm::mat4 &view, const glm::mat4 &projection)
-{
+glm::mat4 CelestialBody::getModelMatrix() const {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, position);
+    model = glm::scale(model, scale);
+    model = glm::rotate(model, glm::radians(rotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+    return model;
+}
+
+void CelestialBody::render(const glm::mat4& view, const glm::mat4& projection) {
     shader->use();
 
     glm::mat4 model = glm::mat4(1.0f);
@@ -218,4 +208,96 @@ void CelestialBody::render(const glm::mat4 &view, const glm::mat4 &projection)
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+}
+
+void CelestialBody::renderWithLighting(const glm::mat4& view, const glm::mat4& projection, 
+                                      const LightManager& lightManager, 
+                                      const glm::vec3& cameraPos) {
+    shader->use();
+    
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, position);
+    model = glm::rotate(model, rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f)); // Y-axis rotation
+    model = glm::scale(model, scale);
+    
+    shader->setMat4("model", model);
+    shader->setMat4("view", view);
+    shader->setMat4("projection", projection);
+    
+    // Apply lighting
+    lightManager.applyLightsToShader(*shader, cameraPos);
+    
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    shader->setInt("objectTexture", 0);
+    
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+}
+
+void CelestialBody::renderWithShadows(const glm::mat4& view, const glm::mat4& projection, 
+                                     const LightManager& lightManager, 
+                                     const glm::vec3& cameraPos,
+                                     const ShadowMap* shadowMap,
+                                     bool enableShadows,
+                                     const glm::vec3& lightDirection) {
+    // Use shadow-enabled shader if shadows are enabled, otherwise fall back to regular lighting
+    Shader* shaderToUse = shader.get();
+    
+    shaderToUse->use();
+    
+    glm::mat4 model = getModelMatrix();
+    
+    shaderToUse->setMat4("model", model);
+    shaderToUse->setMat4("view", view);
+    shaderToUse->setMat4("projection", projection);
+    
+    // Apply lighting
+    lightManager.applyLightsToShader(*shaderToUse, cameraPos);
+    
+    // Set shadow-related uniforms (if shader supports them)
+    if (enableShadows && shadowMap) {
+        // Use the light direction passed from Scene for consistency
+        glm::mat4 lightSpaceMatrix = shadowMap->calculateLightSpaceMatrix(lightDirection, glm::vec3(0.0f), 150.0f);
+        
+        shaderToUse->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+        shaderToUse->setInt("enableShadows", 1);
+        
+        // Bind shadow map to texture unit 1
+        shadowMap->bindForReading(1);
+        shaderToUse->setInt("shadowMap", 1);
+    } else {
+        shaderToUse->setInt("enableShadows", 0);
+    }
+    
+    // Bind object texture to unit 0
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    shaderToUse->setInt("objectTexture", 0);
+    
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+}
+
+std::string CelestialBody::getBasicVertexShaderPath() {
+    return "shaders/basic.vert";
+}
+
+std::string CelestialBody::getBasicFragmentShaderPath() {
+    return "shaders/basic.frag";
+}
+
+void CelestialBody::setLightingMode(bool enableLighting) {
+    lightingEnabled = enableLighting;
+    
+    // Create appropriate shader based on lighting mode
+    if (lightingEnabled) {
+        shader = std::unique_ptr<Shader>(Shader::fromFiles(getVertexShaderPath(), getFragmentShaderPath()));
+    } else {
+        shader = std::unique_ptr<Shader>(Shader::fromFiles(getBasicVertexShaderPath(), getBasicFragmentShaderPath()));
+    }
+    
+    if (!shader) {
+        std::cerr << "Failed to load shaders for lighting mode: " << enableLighting << std::endl;
+    }
 }

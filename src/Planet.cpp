@@ -8,7 +8,7 @@ Planet::Planet(const std::string &texturePath, float planetScale)
 
     // Initialize with common sphere generation and texture loading
     generateSphere();
-    setupShaders(getVertexShader(), getFragmentShader());
+    setupShaders(getVertexShaderPath(), getFragmentShaderPath());
     loadTexture(getTexturePath());
 }
 
@@ -17,7 +17,7 @@ Earth::Earth() : Planet("assets/earth.jpg", 4.0f)
 {
     setOrbitalRadius(100.0f);
     setOrbitalSpeed(0.3f);
-    setRotationSpeed(2.0f);
+    setRotationSpeed(0.5f);
 }
 // Moon implementation as a planet (child of Earth)
 Moon::Moon(CelestialBody *parent, float orbitalRadius, float orbitalSpeed, float rotationSpeed, float moonScale) : Planet("assets/moon.png", moonScale)
