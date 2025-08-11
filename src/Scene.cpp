@@ -127,7 +127,7 @@ Scene *Scene::instance = NULL;
 
 Scene::Scene() : camera(glm::vec3(0.0f, 0.0f, 100.0f)), windowWidth(1920), windowHeight(800),
                  deltaTime(0.0f), lastFrame(0.0f), lastX(960), lastY(400), firstMouse(true),
-                 showLightVisualizer(true), enableDynamicLighting(true), enableShadows(true), isSpinning(false)
+                 showLightVisualizer(true), enableDynamicLighting(true), enableShadows(true), isSpinning(true)
 {
     instance = this;
 }
@@ -160,7 +160,7 @@ bool Scene::initialize()
 
     // Configure OpenGL
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     // Set initial viewport
