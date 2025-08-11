@@ -125,9 +125,9 @@ void setProjectionMatrix(int shaderProgram, mat4 projectionMatrix)
 
 Scene *Scene::instance = NULL;
 
-Scene::Scene() : camera(glm::vec3(100.0f, 150.0f, 250.0f)), windowWidth(1920), windowHeight(800),
+Scene::Scene() : camera(glm::vec3(0.0f, 0.0f, 100.0f)), windowWidth(1920), windowHeight(800),
                  deltaTime(0.0f), lastFrame(0.0f), lastX(960), lastY(400), firstMouse(true),
-                 showLightVisualizer(true), enableDynamicLighting(true), enableShadows(true), isSpinning(true)
+                 showLightVisualizer(true), enableDynamicLighting(true), enableShadows(true), isSpinning(false)
 {
     instance = this;
 }
@@ -160,7 +160,7 @@ bool Scene::initialize()
 
     // Configure OpenGL
     glEnable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     // Set initial viewport
@@ -180,12 +180,15 @@ bool Scene::initialize()
     objects.push_back(std::make_unique<Skybox>());
     addCelestialBody(std::make_unique<Sun>());
 
-    // Test adding one planet at a time
+    // Adding planets in order from closest to farthest from the Sun
 
+    // Mercury (closest to the Sun)
+    addCelestialBody(std::make_unique<Mercury>());
 
+    // Venus
+    addCelestialBody(std::make_unique<Venus>());
 
-
-    // Earth
+    // Earth and its Moon
     addCelestialBody(std::make_unique<Earth>());
     CelestialBody *earth = celestialBodies.back().get();
     addCelestialBody(std::make_unique<Moon>(earth));
@@ -207,6 +210,9 @@ bool Scene::initialize()
 
     // Neptune
     addCelestialBody(std::make_unique<Neptune>());
+
+    // Pluto (dwarf planet)
+    addCelestialBody(std::make_unique<Pluto>());
 
     // Initialize lighting mode for all celestial bodies
     for (size_t i = 0; i < celestialBodies.size(); ++i)
@@ -297,7 +303,7 @@ void Scene::run()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         float aspectRatio = (float)windowWidth / (float)windowHeight;
-        glm::mat4 projection = glm::perspective(glm::radians(60.0f), aspectRatio, 0.1f, 5000.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 1000.0f);
         glm::mat4 view = camera.getViewMatrix();
 
         // Calculate light direction for consistent shadow mapping
