@@ -160,7 +160,7 @@ bool Scene::initialize()
 
     // Configure OpenGL
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);  // Disable face culling to see both sides of planets
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     // Set initial viewport
@@ -191,22 +191,22 @@ bool Scene::initialize()
     addCelestialBody(std::make_unique<Moon>(earth));
 
     // Mars
-    //addCelestialBody(std::make_unique<Mars>());
-    // CelestialBody *mars = celestialBodies.back().get();
-    // addCelestialBody(std::make_unique<Moon>(mars, 9.4f, 1.0f, 1.0f, 1.0f));
-    // addCelestialBody(std::make_unique<Moon>(mars, 23.5f, 0.25f, 0.25f, 0.6f));
+    addCelestialBody(std::make_unique<Mars>());
+    CelestialBody *mars = celestialBodies.back().get();
+    addCelestialBody(std::make_unique<Moon>(mars, 9.4f, 1.0f, 1.0f, 1.0f));
+    addCelestialBody(std::make_unique<Moon>(mars, 23.5f, 0.25f, 0.25f, 0.6f));
 
-    // // Jupiter
-    // addCelestialBody(std::make_unique<Jupiter>());
+    // Jupiter
+    addCelestialBody(std::make_unique<Jupiter>());
 
-    // // Saturn
-    // addCelestialBody(std::make_unique<Saturn>());
+    // Saturn
+    addCelestialBody(std::make_unique<Saturn>());
 
-    // // Uranus
-    // addCelestialBody(std::make_unique<Uranus>());
+    // Uranus
+    addCelestialBody(std::make_unique<Uranus>());
 
-    // // Neptune
-    // addCelestialBody(std::make_unique<Neptune>());
+    // Neptune
+    addCelestialBody(std::make_unique<Neptune>());
 
     // Initialize lighting mode for all celestial bodies
     for (size_t i = 0; i < celestialBodies.size(); ++i)
