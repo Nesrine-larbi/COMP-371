@@ -18,8 +18,6 @@
 using namespace glm;
 using namespace std;
 
-
-
 GLuint setupModelVBO(string path, int &vertexCount)
 {
     std::vector<glm::vec3> vertices;
@@ -127,7 +125,7 @@ Scene *Scene::instance = NULL;
 
 Scene::Scene() : camera(glm::vec3(0.0f, 0.0f, 100.0f)), windowWidth(1920), windowHeight(800),
                  deltaTime(0.0f), lastFrame(0.0f), lastX(960), lastY(400), firstMouse(true),
-                 showLightVisualizer(true), enableDynamicLighting(true), enableShadows(true), isSpinning(false)
+                 showLightVisualizer(true), enableDynamicLighting(true), enableShadows(true), isSpinning(true)
 {
     instance = this;
 }
@@ -160,7 +158,7 @@ bool Scene::initialize()
 
     // Configure OpenGL
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     // Set initial viewport
@@ -168,10 +166,10 @@ bool Scene::initialize()
 
     // Setup lighting system
     lightManager.setupDefaultLights();
-    
+
     // Create light visualizer
     lightVisualizer = std::unique_ptr<LightVisualizer>(new LightVisualizer());
-    
+
     // Create shadow map system
     shadowMap = std::unique_ptr<ShadowMap>(new ShadowMap());
     shadowMap->initialize();
@@ -182,16 +180,13 @@ bool Scene::initialize()
 
     // Test adding one planet at a time
 
-
-
-
     // Earth
     addCelestialBody(std::make_unique<Earth>());
     CelestialBody *earth = celestialBodies.back().get();
     addCelestialBody(std::make_unique<Moon>(earth));
 
     // Mars
-    //addCelestialBody(std::make_unique<Mars>());
+    // addCelestialBody(std::make_unique<Mars>());
     // CelestialBody *mars = celestialBodies.back().get();
     // addCelestialBody(std::make_unique<Moon>(mars, 9.4f, 1.0f, 1.0f, 1.0f));
     // addCelestialBody(std::make_unique<Moon>(mars, 23.5f, 0.25f, 0.25f, 0.6f));
@@ -213,7 +208,7 @@ bool Scene::initialize()
     {
         celestialBodies[i]->setLightingMode(enableDynamicLighting);
     }
-    
+
     // Create planet-specific lighting system
     createPlanetLightsSystem();
 
@@ -239,7 +234,7 @@ void Scene::run()
     std::cout << "===========================================" << std::endl;
 
     string satellitePath = "assets/models/satellite.obj";
-    
+
     // Create satellite shader using the modern Shader class
     satelliteShader = std::unique_ptr<Shader>(Shader::fromFiles("shaders/object.vert", "shaders/object.frag"));
 
@@ -276,10 +271,10 @@ void Scene::run()
         {
             celestialBodies[i]->update(deltaTime);
         }
-        
+
         // Update planet-specific lights to follow their planets
         updatePlanetLights();
-        
+
         // Update lighting system only if enabled
         if (enableDynamicLighting)
         {
@@ -289,7 +284,8 @@ void Scene::run()
         }
 
         // First pass: Render shadow map
-        if (enableShadows && enableDynamicLighting) {
+        if (enableShadows && enableDynamicLighting)
+        {
             renderShadowPass();
         }
 
@@ -306,9 +302,12 @@ void Scene::run()
         // Render all objects with shadow support
         for (size_t i = 0; i < celestialBodies.size(); ++i)
         {
-            if (enableDynamicLighting) {
+            if (enableDynamicLighting)
+            {
                 celestialBodies[i]->renderWithShadows(view, projection, lightManager, camera.getPosition(), shadowMap.get(), enableShadows, lightDirection);
-            } else {
+            }
+            else
+            {
                 celestialBodies[i]->render(view, projection);
             }
         }
@@ -316,7 +315,7 @@ void Scene::run()
         {
             objects[i]->render(view, projection);
         }
-        
+
         // Render light indicators if enabled and lighting is on
         if (showLightVisualizer && enableDynamicLighting)
         {
@@ -376,7 +375,7 @@ void Scene::processInput()
         camera.processKeyboard(2, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.processKeyboard(3, deltaTime);
-    
+
     // Toggle light visualizer with L key
     static bool lKeyPressed = false;
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS && !lKeyPressed)
@@ -388,20 +387,20 @@ void Scene::processInput()
     {
         lKeyPressed = false;
     }
-    
+
     // Toggle dynamic lighting and shadows with P key (combined)
     static bool pKeyPressed = false;
     if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS && !pKeyPressed)
     {
         enableDynamicLighting = !enableDynamicLighting;
         enableShadows = enableDynamicLighting; // Shadows follow lighting state
-        
+
         // Update all celestial bodies to use appropriate shaders
         for (size_t i = 0; i < celestialBodies.size(); ++i)
         {
             celestialBodies[i]->setLightingMode(enableDynamicLighting);
         }
-        
+
         std::cout << "Dynamic Lighting & Shadows " << (enableDynamicLighting ? "enabled" : "disabled") << std::endl;
         pKeyPressed = true;
     }
@@ -451,76 +450,93 @@ void Scene::createPlanetLightsSystem()
 {
     // Clear existing planet light indices
     planetLightIndices.clear();
-    
+
     // Get sun position (assuming first celestial body is the sun)
     glm::vec3 sunPosition(0.0f, 0.0f, 0.0f);
-    if (!celestialBodies.empty()) {
+    if (!celestialBodies.empty())
+    {
         sunPosition = celestialBodies[0]->getPosition();
     }
-    
+
     std::cout << "\n=== Creating Planet Lighting System ===" << std::endl;
     std::cout << "Sun position: (" << sunPosition.x << ", " << sunPosition.y << ", " << sunPosition.z << ")" << std::endl;
-    
+
     // Create individual lights for each planet (skip sun at index 0 and moons)
-    for (size_t i = 1; i < celestialBodies.size(); ++i) {
+    for (size_t i = 1; i < celestialBodies.size(); ++i)
+    {
         // Skip moons - we only want lights for planets
         // Check if this celestial body is a Moon by attempting dynamic cast
-        if (dynamic_cast<Moon*>(celestialBodies[i].get()) != nullptr) {
+        if (dynamic_cast<Moon *>(celestialBodies[i].get()) != nullptr)
+        {
             std::cout << "Skipping light creation for Moon at index " << i << std::endl;
             continue;
         }
-        
+
         glm::vec3 planetPosition = celestialBodies[i]->getPosition();
-        
+
         // Calculate distance from sun for intensity
         float distanceFromSun = glm::length(planetPosition - sunPosition);
         float baseSunDistance = 50.0f;
         float intensityFactor = (baseSunDistance * baseSunDistance) / (distanceFromSun * distanceFromSun);
         intensityFactor = glm::clamp(intensityFactor, 0.1f, 2.0f);
-        
+
         // Create a warm sunlight color with slight variations for each planet
         glm::vec3 lightColor;
-        switch (i % 4) {
-            case 1: lightColor = glm::vec3(1.0f, 0.95f, 0.8f); break;  // Warm white
-            case 2: lightColor = glm::vec3(1.0f, 0.9f, 0.7f); break;   // Slightly warmer
-            case 3: lightColor = glm::vec3(0.95f, 0.9f, 0.85f); break; // Cooler white
-            default: lightColor = glm::vec3(1.0f, 0.92f, 0.75f); break; // Golden white
+        switch (i % 4)
+        {
+        case 1:
+            lightColor = glm::vec3(1.0f, 0.95f, 0.8f);
+            break; // Warm white
+        case 2:
+            lightColor = glm::vec3(1.0f, 0.9f, 0.7f);
+            break; // Slightly warmer
+        case 3:
+            lightColor = glm::vec3(0.95f, 0.9f, 0.85f);
+            break; // Cooler white
+        default:
+            lightColor = glm::vec3(1.0f, 0.92f, 0.75f);
+            break; // Golden white
         }
-        
+
         // Add planet-specific light
         size_t lightIndex = lightManager.getLightCount();
         lightManager.addPlanetLight(sunPosition, planetPosition, lightColor);
         planetLightIndices.push_back(lightIndex);
-        
-        std::cout << "Planet " << i << ": Distance from sun = " << distanceFromSun 
-                  << ", Intensity factor = " << intensityFactor 
+
+        std::cout << "Planet " << i << ": Distance from sun = " << distanceFromSun
+                  << ", Intensity factor = " << intensityFactor
                   << ", Position = (" << planetPosition.x << ", " << planetPosition.y << ", " << planetPosition.z << ")" << std::endl;
     }
-    
+
     std::cout << "Created " << planetLightIndices.size() << " planet lights for debugging visualization." << std::endl;
     std::cout << "Use 'L' key to toggle light visualizer to see light positions." << std::endl;
-    std::cout << "========================================\n" << std::endl;
+    std::cout << "========================================\n"
+              << std::endl;
 }
 
 void Scene::updatePlanetLights()
 {
     // Get current sun position
     glm::vec3 sunPosition(0.0f, 0.0f, 0.0f);
-    if (!celestialBodies.empty()) {
+    if (!celestialBodies.empty())
+    {
         sunPosition = celestialBodies[0]->getPosition();
     }
-    
+
     // Update each planet light to follow its planet's orbital motion
     // We need to track which light corresponds to which planet since we skip moons
     size_t lightIndex = 0;
-    for (size_t i = 1; i < celestialBodies.size(); ++i) {
+    for (size_t i = 1; i < celestialBodies.size(); ++i)
+    {
         // Skip moons - they don't have lights
-        if (dynamic_cast<Moon*>(celestialBodies[i].get()) != nullptr) {
+        if (dynamic_cast<Moon *>(celestialBodies[i].get()) != nullptr)
+        {
             continue;
         }
-        
+
         // This is a planet, update its corresponding light
-        if (lightIndex < planetLightIndices.size()) {
+        if (lightIndex < planetLightIndices.size())
+        {
             glm::vec3 planetPosition = celestialBodies[i]->getPosition();
             size_t actualLightIndex = planetLightIndices[lightIndex];
             lightManager.updatePlanetLight(actualLightIndex, sunPosition, planetPosition);
@@ -529,44 +545,50 @@ void Scene::updatePlanetLights()
     }
 }
 
-void Scene::renderShadowPass() {
-    if (!enableShadows) return;
-    
+void Scene::renderShadowPass()
+{
+    if (!enableShadows)
+        return;
+
     // Calculate light space matrix from sun to earth direction
     glm::vec3 lightDirection = calculateSunToEarthDirection();
     glm::vec3 sceneCenter(0.0f, 0.0f, 0.0f);
     glm::mat4 lightSpaceMatrix = shadowMap->calculateLightSpaceMatrix(lightDirection, sceneCenter, 150.0f);
-    
+
     // Begin shadow pass
     shadowMap->beginShadowPass(lightSpaceMatrix);
-    
+
     // Render all celestial bodies to shadow map (moon will cast shadows)
-    for (size_t i = 0; i < celestialBodies.size(); ++i) {
+    for (size_t i = 0; i < celestialBodies.size(); ++i)
+    {
         // Only render moon and other small objects that can cast shadows
-        if (dynamic_cast<Moon*>(celestialBodies[i].get()) != nullptr) {
+        if (dynamic_cast<Moon *>(celestialBodies[i].get()) != nullptr)
+        {
             // Render moon to shadow map using shadow shader
             shadowMap->getShadowShader()->use();
             shadowMap->getShadowShader()->setMat4("model", celestialBodies[i]->getModelMatrix());
             shadowMap->getShadowShader()->setMat4("lightSpaceMatrix", lightSpaceMatrix);
-            
+
             // Render moon geometry
             glBindVertexArray(celestialBodies[i]->getVAO());
             glDrawElements(GL_TRIANGLES, celestialBodies[i]->getIndexCount(), GL_UNSIGNED_INT, 0);
         }
     }
-    
+
     shadowMap->endShadowPass();
-    
+
     // Reset viewport for main render pass
     glViewport(0, 0, windowWidth, windowHeight);
 }
 
-glm::vec3 Scene::calculateSunToEarthDirection() {
-    if (celestialBodies.size() < 2) return glm::vec3(0.0f, 0.0f, 1.0f);
-    
-    glm::vec3 sunPos = celestialBodies[0]->getPosition(); // Sun
+glm::vec3 Scene::calculateSunToEarthDirection()
+{
+    if (celestialBodies.size() < 2)
+        return glm::vec3(0.0f, 0.0f, 1.0f);
+
+    glm::vec3 sunPos = celestialBodies[0]->getPosition();   // Sun
     glm::vec3 earthPos = celestialBodies[1]->getPosition(); // Earth (first planet)
-    
+
     return glm::normalize(earthPos - sunPos);
 }
 
