@@ -263,6 +263,13 @@ void Scene::run()
     float spinningAngle = 0.0f;
     float lastFrameTime = glfwGetTime();
 
+    string rocketPath = "assets/models/rocket.obj";
+    int rocketVertices;
+    GLuint rocketVAO = setupModelVBO(rocketPath, rocketVertices);
+    std::unique_ptr<Shader> rocketShader = std::unique_ptr<Shader>(Shader::fromFiles("shaders/object.vert", "shaders/rocket.frag"));
+    glm::vec3 rocketPosition(0.0f, 0.0f, 70.0f);
+    float rocketSpeed = 30.0f;
+
     while (!glfwWindowShouldClose(window))
     {
 
@@ -358,6 +365,35 @@ void Scene::run()
         glDrawArrays(GL_TRIANGLES, 0, satelliteVertices);
 
         glBindVertexArray(0);
+
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+            rocketPosition.y += rocketSpeed * deltaTime;
+        }
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            rocketPosition.y -= rocketSpeed * deltaTime;
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            rocketPosition.x -= rocketSpeed * deltaTime;
+        }
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+            rocketPosition.x += rocketSpeed * deltaTime;
+        }
+        // Create rocket matrix
+        glm::mat4 rocketMatrix = glm::translate(glm::mat4(1.0f), rocketPosition);
+        rocketMatrix = glm::rotate(rocketMatrix, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        rocketMatrix = glm::scale(rocketMatrix, glm::vec3(2.0f));
+        
+        // Render rocket with shader class
+        rocketShader->use();
+        rocketShader->setMat4("projectionMatrix", projection);
+        rocketShader->setMat4("worldMatrix", rocketMatrix);
+        rocketShader->setMat4("viewMatrix", view);
+
+        glBindVertexArray(rocketVAO);
+        glDrawArrays(GL_TRIANGLES, 0, rocketVertices);
+        
+        glBindVertexArray(0);
+        
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
